@@ -5,3 +5,8 @@ Windy's pages
 
 currently only set up to read touch events from a device with a touch screen. 
 Uses WebGPU
+
+[Bouncing Balls](https://windy-lion.github.io/BouncingBalls/)
+
+Balls only bounce off the walls at the moment. They will bounce off each other in the future. 
+Uses WebGPU
