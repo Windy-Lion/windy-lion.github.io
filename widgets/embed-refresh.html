@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--
+parameters
+  url
+    urlencoded src
+    https%3A%2F%2Fdixonvalve-my.sharepoint.com%2Fpersonal%2Fkwegner_hydrasearch_com%2F_layouts%2F15%2FDoc.aspx%3Fsourcedoc%3D%7B30d291a3-98d0-471a-9c9d-5ee382c13ffc%7D%26action%3Dembedview%26wdAllowInteractivity%3DFalse%26Item%3DChart%25204%26wdInConfigurator%3DTrue%26wdInConfigurator%3DTrue
+  frame-paramName
+    passes html properties to iframe
+  container-paramName
+    passes html properties to container
+  refresh-timeout
+    minutes
+  zoom-fit
+    whether to scale frame
+example:
+  thisPage.html?refresh-timeout=20&container-height=375px&frame-height=405px&container-width=660px&frame-width=660px&container-overflow-y=hidden&url=https%3A%2F%2Fdixonvalve-my.sharepoint.com%2Fpersonal%2Fkwegner_hydrasearch_com%2F_layouts%2F15%2FDoc.aspx%3Fsourcedoc%3D%7B30d291a3-98d0-471a-9c9d-5ee382c13ffc%7D%26action%3Dembedview%26wdAllowInteractivity%3DFalse%26Item%3DChart%25204%26wdInConfigurator%3DTrue%26wdInConfigurator%3DTrue
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Iframe Loader</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  #iframe-container {
+    box-sizing: border-box;
+  }
+  iframe {
+    border: 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="iframe-container">
+  <iframe id="dynamic-frame"></iframe>
+</div>
+
+<script>
+// Parse query string safely
+function getQueryParams() {
+    const params = {};
+    const searchParams = new URLSearchParams(window.location.search);
+    for (const [key, value] of searchParams.entries()) {
+        params[key] = value;
+    }
+    return params;
+}
+
+// Convert dash-case to camelCase
+function toCamelCase(str) {
+    return str.replace(/-([a-z])/g, g => g[1].toUpperCase());
+}
+
+// Apply arbitrary properties
+function applyProperties(params) {
+    const iframe = document.getElementById("dynamic-frame");
+    const container = document.getElementById("iframe-container");
+
+    if (!params.url) {
+        container.innerHTML = "<p>Error: No URL specified</p>";
+        return;
+    }
+
+    iframe.src = params.url;
+
+    Object.keys(params).forEach(key => {
+
+        // Handle iframe properties
+        if (key.startsWith("frame-")) {
+            const prop = key.replace("frame-", "");
+            const camelProp = toCamelCase(prop);
+            const value = params[key];
+
+            // Try direct property first
+            if (camelProp in iframe) {
+                iframe[camelProp] = value;
+            } else {
+                // fallback to attribute
+                iframe.setAttribute(prop, value);
+            }
+        }
+
+        // Handle container style properties
+        if (key.startsWith("container-")) {
+            const prop = key.replace("container-", "");
+            const camelProp = toCamelCase(prop);
+            container.style[camelProp] = params[key];
+        }
+    });
+
+    // Special: zoom-fit
+    if (params["zoom-fit"] === "true") {
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+    }
+
+    // Special: refresh-timeout (minutes)
+    if (params["refresh-timeout"]) {
+        const minutes = parseFloat(params["refresh-timeout"]);
+        if (!isNaN(minutes) && minutes > 0) {
+            setInterval(() => {
+                iframe.src = iframe.src;
+            }, minutes * 60 * 1000);
+        }
+    }
+}
+
+// Initialize
+window.onload = () => {
+    const params = getQueryParams();
+    applyProperties(params);
+};
+</script>
+
+</body>
+</html>
